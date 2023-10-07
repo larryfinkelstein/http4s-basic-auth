@@ -1,17 +1,17 @@
 import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.implicits._
+import com.comcast.ip4s._
+import dev.profunktor.auth._
+import dev.profunktor.auth.jwt._
+import io.circe._
+import io.circe.parser._
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.ember.server._
-import com.comcast.ip4s._
-import cats.implicits._
-import dev.profunktor.auth._
-import dev.profunktor.auth.jwt._
+import org.http4s.server.Server
 import pdi.jwt._
 
 import java.time.Instant
-import io.circe._
-import io.circe.parser._
-import org.http4s.server.Server
 
 object TokenAuth extends IOApp {
   case class AuthUser(id: Long, name: String)
@@ -36,9 +36,9 @@ object TokenAuth extends IOApp {
 
   private val token = JwtCirce.encode(claim, key, algo)
 
-  private val database = Map("John" -> AuthUser(123, "JohnDoe"))
+  private val database = Map("John" -> "JohnDoe")
 
-  private val authenticate: JwtToken => JwtClaim => IO[Option[AuthUser]] = (token: JwtToken) => (claim: JwtClaim) => {
+  private val authenticate: JwtToken => JwtClaim => IO[Option[String]] = (token: JwtToken) => (claim: JwtClaim) => {
     decode[TokenPayLoad](claim.content) match {
       case Right(payload) => IO(database.get(payload.user))
       case Left(_) => IO(None)
@@ -46,15 +46,15 @@ object TokenAuth extends IOApp {
   }
 
   private val jwtAuth = JwtAuth.hmac(key, algo)
-  private val middleware = JwtAuthMiddleware[IO, AuthUser](jwtAuth, authenticate)
+  private val middleware = JwtAuthMiddleware[IO, String](jwtAuth, authenticate)
 
-  val authedRoutes: AuthedRoutes[AuthUser, IO] =
+  val authedRoutes: AuthedRoutes[String, IO] =
     AuthedRoutes.of {
       case GET -> Root / "welcome" as user =>
-        Ok(s"Welcome, ${user.name}")
+        Ok(s"Welcome, $user")
     }
 
-  private val loginRoutes: HttpRoutes[IO] =
+  val loginRoutes: HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case GET -> Root / "login" =>
         Ok(s"Logged In").map(_.addCookie(ResponseCookie("token", token)))

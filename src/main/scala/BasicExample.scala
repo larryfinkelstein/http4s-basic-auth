@@ -1,27 +1,23 @@
+import cats.data._
 import cats.effect._
+import com.comcast.ip4s._
 import org.http4s._
 import org.http4s.dsl.io._
-import org.http4s.server._
-import org.http4s.implicits._
 import org.http4s.ember.server._
-import com.comcast.ip4s._
-
-import cats.data._
-import org.http4s.Credentials
 import org.http4s.headers.Authorization
+import org.http4s.implicits._
+import org.http4s.server._
 
 object BasicExample extends IOApp {
 
-  case class User(id: Long, name: String)
-
-  val authUserEither: Kleisli[IO, Request[IO], Either[String, User]] = Kleisli { req =>
+  val authUserEither: Kleisli[IO, Request[IO], Either[String, String]] = Kleisli { req =>
     val authHeader: Option[Authorization] = req.headers.get[Authorization]
     authHeader match {
       case Some(value) =>
         value match {
           case Authorization(BasicCredentials(creds)) =>
             if (creds == ("username", "password"))
-              IO(Right(User(1, creds._1)))
+              IO(Right(creds._1))
             else
               IO(Left("Unauthorized"))
           case _ => IO(Left("No basic credentials"))
@@ -30,12 +26,10 @@ object BasicExample extends IOApp {
     }
   }
 
-//  val userMiddleware: AuthMiddleware[IO, User] = AuthMiddleware(authUserEither)
-
-  val authedRoutes: AuthedRoutes[User, IO] =
+  val authedRoutes: AuthedRoutes[String, IO] =
     AuthedRoutes.of {
       case GET -> Root / "welcome" as user =>
-        Ok(s"Welcome, ${user.name}")
+        Ok(s"Welcome, $user")
     }
 
   val onFailure: AuthedRoutes[String, IO] = Kleisli { (req: AuthedRequest[IO, String]) =>
@@ -44,7 +38,7 @@ object BasicExample extends IOApp {
     }
   }
 
-  val authMiddleware: AuthMiddleware[IO, User] = AuthMiddleware(authUserEither, onFailure)
+  val authMiddleware: AuthMiddleware[IO, String] = AuthMiddleware(authUserEither, onFailure)
 
   val serviceKleisli: HttpRoutes[IO] = authMiddleware(authedRoutes)
 

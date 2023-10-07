@@ -1,0 +1,39 @@
+### GET login
+GET http://localhost:8080/login
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+### GET welcome
+GET http://localhost:8080/welcome
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2OTY3MTc4MTAsImlhdCI6MTY5NjcxNjkxMCwidXNlciI6IkpvaG4iLCAibGV2ZWwiOiJiYXNpYyJ9.xxFEkmHBhm4RgfyRJvEb35_6KVdoZqqcR9JG7a0ZHx0
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+### GET invalid request
+GET http://localhost:8080/welcome
+Authorization: Basic username password
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 403, "Response status is not 403");
+});
+%}
+
+### GET welcome bad token
+GET http://localhost:8080/welcome
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2OTY3MTc4MTAsImlhdCI6MTY5NjcxNjkxMCwidXNlciI6IkpvaG4iLCAibGV2ZWwiOiJiYXNpYyJ9.xxFEkmHBhm4RgfyRJvEb35_6KVdoZqqcR9JG7a0ZHx9
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 403, "Response status is not 403");
+});
+%}
+

@@ -11,6 +11,7 @@ val emberServer =     "org.http4s"              %% "http4s-ember-server" % Http4
 val jwtHttp4s =       "dev.profunktor"          %% "http4s-jwt-auth"     % JwtHttp4sVersion
 val jwtScala =        "com.github.jwt-scala"    %% "jwt-core"            % JwtScalaVersion
 val jwtCirce =        "com.github.jwt-scala"    %% "jwt-circe"           % JwtScalaVersion
+val munit =           "com.alejandrohdezma"     %% "http4s-munit"        % "0.15.1" % Test
 
 
 lazy val root = (project in file("."))
@@ -23,5 +24,6 @@ libraryDependencies ++= Seq(
   http4sDsl,
   jwtHttp4s,
   jwtScala,
-  jwtCirce
+  jwtCirce,
+  munit
 )
